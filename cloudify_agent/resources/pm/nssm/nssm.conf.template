@@ -23,6 +23,8 @@ SETLOCAL ENABLEDELAYEDEXPANSION
 set "AGENT_PATH={{ virtualenv_path }}\Scripts"
 set "NEW_PATH=%PATH%;%AGENT_PATH%"
 
+echo %NEW_PATH%
+
 {{ nssm_path }} set {{ name }} AppEnvironmentExtra ^
 PATH=%NEW_PATH% ^
 MANAGEMENT_IP={{ manager_ip }} ^
