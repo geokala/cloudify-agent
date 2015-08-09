@@ -22,11 +22,7 @@ echo Setting service environment
 SETLOCAL enabledelayedexpansion
 
 set "AGENT_PATH={{ virtualenv_path }}\Scripts"
-set "NEW_PATH=%AGENT_PATH%;%PATH%"
-
-set find="C:\\Program Files (x86)\\Inno Setup 5"
-set "replace=C:\\Program Files (x86)\\Inno Setup 5"
-call set NEW_PATH=%%NEW_PATH:!find!=!replace!%%
+set NEW_PATH=%AGENT_PATH%;%PATH%
 
 echo %NEW_PATH%
 
