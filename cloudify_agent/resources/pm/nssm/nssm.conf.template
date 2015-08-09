@@ -30,7 +30,7 @@ call set NEW_PATH=%%NEW_PATH:!find!=!replace!%%
 echo %NEW_PATH%
 
 {{ nssm_path }} set {{ name }} AppEnvironmentExtra ^
-PATH=%NEW_PATH% ^
+PATH="%NEW_PATH%" ^
 MANAGEMENT_IP={{ manager_ip }} ^
 MANAGER_REST_PORT={{ manager_port }} ^
 MANAGER_FILE_SERVER_URL=http://{{ manager_ip }}:53229 ^
