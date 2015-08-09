@@ -19,8 +19,9 @@ if %errorlevel% neq 0 exit /b %errorlevel%
 
 echo Setting service environment
 
-SET AGENT_PATH={{ virtualenv_path }}\Scripts
-SET NEW_PATH=%PATH%;%AGENT_PATH%
+SETLOCAL ENABLEDELAYEDEXPANSION
+set "AGENT_PATH={{ virtualenv_path }}\Scripts"
+set "NEW_PATH=%PATH%;%AGENT_PATH%"
 
 {{ nssm_path }} set {{ name }} AppEnvironmentExtra ^
 PATH=%NEW_PATH% ^
