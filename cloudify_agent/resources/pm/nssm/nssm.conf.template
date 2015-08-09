@@ -21,7 +21,7 @@ echo Setting service environment
 
 SETLOCAL ENABLEDELAYEDEXPANSION
 set "AGENT_PATH={{ virtualenv_path }}\Scripts"
-set "NEW_PATH=%AGENT_PATH%";%PATH%
+set "NEW_PATH=%AGENT_PATH%;%PATH%"
 
 set find="C:\\Program Files (x86)\\Inno Setup 5"
 set replace=C:\\Program Files (x86)\\Inno Setup 5
