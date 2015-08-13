@@ -15,6 +15,7 @@
 
 import os
 from functools import wraps
+from copy import deepcopy
 
 from cloudify.decorators import operation
 from cloudify import ctx
@@ -62,7 +63,10 @@ def init_agent_installer(func=None, validate_connection=True):
                             protocol=cloudify_agent.get('protocol'),
                             uri=cloudify_agent.get('uri'),
                             logger=ctx.logger,
-                            validate_connection=_validate_connection)
+                            validate_connection=_validate_connection,
+                            broker_user=cloudify_agent['broker_user'],
+                            broker_pass=cloudify_agent['broker_pass'],
+                            broker_ssl_cert=cloudify_agent['broker_ssl_cert'])
                     else:
                         runner = FabricRunner(
                             logger=ctx.logger,
@@ -72,7 +76,10 @@ def init_agent_installer(func=None, validate_connection=True):
                             key=cloudify_agent.get('key'),
                             password=cloudify_agent.get('password'),
                             fabric_env=cloudify_agent.get('fabric_env'),
-                            validate_connection=_validate_connection)
+                            validate_connection=_validate_connection,
+                            broker_user=cloudify_agent['broker_user'],
+                            broker_pass=cloudify_agent['broker_pass'],
+                            broker_ssl_cert=cloudify_agent['broker_ssl_cert'])
                 except CommandExecutionError as e:
                     return ctx.operation.retry(message=e.error)
 

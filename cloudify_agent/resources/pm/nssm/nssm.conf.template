@@ -13,6 +13,7 @@ echo Installing the agent as a windows service...
 --pidfile={{ pid_file }} ^
 --logfile={{ log_file }} ^
 --include={{ includes }} ^
+--config {{ work_dir }}/worker_conf.py ^
 -Ofair
 
 if %errorlevel% neq 0 exit /b %errorlevel%

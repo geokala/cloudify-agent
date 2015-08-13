@@ -105,7 +105,8 @@ class NonSuckingServiceManagerDaemon(Daemon):
             custom_environment=env_string,
             startup_policy=self.startup_policy,
             failure_reset_timeout=self.failure_reset_timeout,
-            failure_restart_delay=self.failure_restart_delay
+            failure_restart_delay=self.failure_restart_delay,
+            work_dir=self.workdir,
         )
 
         self._logger.debug('Rendered configuration script: {0}'.format(
@@ -115,6 +116,12 @@ class NonSuckingServiceManagerDaemon(Daemon):
         self._logger.info('Running configuration script')
         self._runner.run(self.config_path)
         self._logger.debug('Successfully executed configuration script')
+
+        # Add the celery config and SSL cert (if applicable)
+        self._logger.info('Deploying SSL cert (if defined).')
+        self._create_ssl_cert()
+        self._logger.info('Deploying celery configuration.')
+        self._create_celery_conf()
 
         # register plugins
         for plugin in included_plugins:
