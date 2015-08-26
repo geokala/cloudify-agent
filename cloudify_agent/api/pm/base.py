@@ -332,13 +332,13 @@ class Daemon(object):
         to be called before self.broker_port has been set and after
         self.broker_ssl_cert has been set.
         """
-        if self.broker_ssl_cert == '':
+        if self.broker_ssl_cert is None:
             return 5672
         else:
             return 5671
 
     def _create_ssl_cert(self):
-        if self.broker_ssl_cert != '':
+        if self.broker_ssl_cert is not None:
             utils.render_template_to_file(
                 template_path='pm/shared/broker.crt.template',
                 file_path=self._get_ssl_cert_path(),
@@ -347,7 +347,7 @@ class Daemon(object):
 
     def _get_ssl_cert_path(self):
         if self.broker_ssl_cert == '':
-            return ''
+            return None
         else:
             return os.path.join(self.workdir, 'broker.crt')
 
@@ -357,7 +357,7 @@ class Daemon(object):
             file_path=os.path.join(self.virtualenv,
                                    'lib/python2.7/site-packages',
                                    'worker_conf.py'),
-            broker_cert=self._get_ssl_cert_path(),
+            broker_cert=self._get_ssl_cert_path() or '',
             broker_url=self.broker_url,
             work_dir=self.workdir,
         )
@@ -661,7 +661,10 @@ class Daemon(object):
             raise exceptions.DaemonError(error)
 
     def _delete_amqp_queues(self):
-        client = amqp_client.create_client(self.broker_ip)
+        client = amqp_client.create_client(
+            self.broker_ip,
+            ssl_cert_path=self._get_ssl_cert_path(),
+        )
         try:
             channel = client.connection.channel()
             self._logger.debug('Deleting queue: {0}'.format(self.queue))
