@@ -76,6 +76,21 @@ from cloudify_agent.shell.decorators import handle_failures
                    'option will be used. [{0}]'
                    .format(env.CLOUDIFY_BROKER_IP),
               envvar=env.CLOUDIFY_BROKER_IP)
+@click.option('--broker-user',
+              help='The username for the AMQP broker. '
+                   'Defaults to "guest". [{envvar}]'
+                   .format(envvar=env.CLOUDIFY_BROKER_USER),
+              envvar=env.CLOUDIFY_BROKER_USER)
+@click.option('--broker-pass',
+              help='The password for the AMQP broker. '
+                   'Defaults to "guest". [{envvar}]'
+                   .format(envvar=env.CLOUDIFY_BROKER_PASS),
+              envvar=env.CLOUDIFY_BROKER_PASS)
+@click.option('--broker-ssl-cert-path',
+              help='The public SSL cert path for the AMQP broker. '
+                   '[{envvar}]'
+                   .format(envvar=env.CLOUDIFY_BROKER_SSL_CERT_PATH),
+              envvar=env.CLOUDIFY_BROKER_SSL_CERT_PATH)
 @click.option('--broker-port',
               help='The broker port to connect to. [env {0}]'
                    .format(env.CLOUDIFY_BROKER_PORT),

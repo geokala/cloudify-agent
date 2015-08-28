@@ -67,6 +67,12 @@ class AgentInstaller(object):
     def configure_agent(self):
         self.run_daemon_command('configure')
 
+    def _get_ssl_cert_path(self, cert):
+        if cert == '':
+            return None
+        else:
+            return os.path.join(os.getcwd(), 'broker.crt')
+
     def start_agent(self):
         self.run_daemon_command('start')
 
@@ -176,7 +182,13 @@ class AgentInstaller(object):
             env.CLOUDIFY_DAEMON_WORKDIR: self.cloudify_agent['workdir'],
             env.CLOUDIFY_DAEMON_EXTRA_ENV:
                 self.create_custom_env_file_on_target(
-                    self.cloudify_agent.get('env', {}))
+                    self.cloudify_agent.get('env', {})),
+            env.CLOUDIFY_BROKER_USER: self.cloudify_agent.get('broker_user'),
+            env.CLOUDIFY_BROKER_PASS: self.cloudify_agent.get('broker_pass'),
+            env.CLOUDIFY_BROKER_SSL_CERT_PATH:
+                self._get_ssl_cert_path(
+                    self.cloudify_agent.get('broker_ssl_cert')
+                ),
         }
 
         execution_env = utils.purge_none_values(execution_env)

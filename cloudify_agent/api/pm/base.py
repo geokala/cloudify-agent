@@ -349,7 +349,7 @@ class Daemon(object):
         if self.broker_ssl_cert == '':
             return None
         else:
-            return os.path.join(self.workdir, 'broker.crt')
+            return os.path.join(os.getcwd(), 'broker.crt')
 
     def _create_celery_conf(self):
         utils.render_template_to_file(

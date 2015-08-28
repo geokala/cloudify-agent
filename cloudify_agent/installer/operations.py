@@ -132,7 +132,6 @@ def init_agent_installer(func=None, validate_connection=True):
                 fn, validate_connection=validate_connection)
         return partial_wrapper
 
-
 @operation
 @init_agent_installer
 def create(cloudify_agent, installer, **_):
