@@ -332,13 +332,13 @@ class Daemon(object):
         to be called before self.broker_port has been set and after
         self.broker_ssl_cert has been set.
         """
-        if self.broker_ssl_cert is None:
+        if self.broker_ssl_cert == '':
             return 5672
         else:
             return 5671
 
     def _create_ssl_cert(self):
-        if self.broker_ssl_cert is not None:
+        if self.broker_ssl_cert != '':
             utils.render_template_to_file(
                 template_path='pm/shared/broker.crt.template',
                 file_path=self._get_ssl_cert_path(),
