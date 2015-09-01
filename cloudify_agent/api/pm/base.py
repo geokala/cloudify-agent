@@ -663,6 +663,8 @@ class Daemon(object):
     def _delete_amqp_queues(self):
         client = amqp_client.create_client(
             self.broker_ip,
+            username=self.broker_user,
+            password=self.broker_pass,
             ssl_cert_path=self._get_ssl_cert_path(),
         )
         try:
