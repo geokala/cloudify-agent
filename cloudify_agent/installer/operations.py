@@ -42,14 +42,22 @@ def init_agent_installer(func=None, validate_connection=True):
             cloudify_agent = kwargs.get('cloudify_agent')
 
             if cloudify_agent is None:
-                if 'ctx' in kwargs.keys():
-                    context = kwargs['ctx'].bootstrap_context
+                context = kwargs.get('ctx')
+                if context is None:
+                    context = kwargs.get('__cloudify_context')
+ 
+                try:
+                    bs_context = context.bootstrap_context
+                except AttributeError:
+                    bs_context = None
+ 
+                if bs_context is not None:
                     try:
-                        cloudify_agent = vars(context.cloudify_agent)
+                        cloudify_agent = vars(bs_context.cloudify_agent)
                     except TypeError:
                         # On 2.7.4 vars may fail with a TypeError, use
                         # old _asdict approach (obsolete in 3)
-                        cloudify_agent = context.cloudify_agent._asdict()
+                        cloudify_agent = bs_context.cloudify_agent._asdict()
                 else:
                     cloudify_agent = {}
 
