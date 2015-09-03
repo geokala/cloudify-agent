@@ -347,7 +347,7 @@ class Daemon(object):
 
     def _get_ssl_cert_path(self):
         if self.broker_ssl_cert == '':
-            return None
+            return ''
         else:
             return os.path.join(os.getcwd(), 'broker.crt')
 
