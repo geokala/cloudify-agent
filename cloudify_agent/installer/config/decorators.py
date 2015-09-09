@@ -57,8 +57,13 @@ def attribute(name):
             if attr is None:
                 raise RuntimeError('{0} is not an agent attribute'
                                    .format(name))
-            agent_context = ctx.bootstrap_context.cloudify_agent.\
-                _cloudify_agent or {}
+            bs_context = ctx.bootstrap_context
+            try:
+                agent_context = vars(bs_context.cloudify_agent)
+            except TypeError:
+                # On 2.7.4 vars may fail with a TypeError, use
+                # old _asdict approach (obsolete in 3)
+                agent_context = bs_context.cloudify_agent._asdict()
             context_attribute = attr.get('context_attribute', name)
             if context_attribute in agent_context:
                 value = agent_context.get(context_attribute)
