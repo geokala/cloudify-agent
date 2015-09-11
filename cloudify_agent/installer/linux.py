@@ -33,10 +33,14 @@ class RemoteLinuxAgentInstaller(LinuxInstallerMixin, RemoteInstallerMixin):
         from cloudify_agent.installer.runners.fabric_runner \
             import FabricRunner
 
-        params = cloudify_agent
-        params['logger'] = self.logger
-
-        self.runner = FabricRunner(**params)
+        self.runner = FabricRunner(
+            logger=self.logger,
+            host=cloudify_agent['ip'],
+            user=cloudify_agent['user'],
+            port=cloudify_agent.get('port'),
+            key=cloudify_agent.get('key'),
+            password=cloudify_agent.get('password'),
+            fabric_env=cloudify_agent.get('fabric_env'))
 
     def extract(self, archive, destination):
         return self.runner.untar(archive, destination)
