@@ -67,6 +67,10 @@ class GenericLinuxDaemon(CronRespawnDaemon):
                            .format(self.config_path))
         self._create_config()
 
+        # Add the celery config
+        self._logger.info('Deploying celery configuration.')
+        self._create_celery_conf()
+
         if self.start_on_boot:
             self._logger.info('Creating start-on-boot entry')
             self._create_start_on_boot_entry()
@@ -157,7 +161,8 @@ class GenericLinuxDaemon(CronRespawnDaemon):
             pid_file=self.pid_file,
             cron_respawn=str(self.cron_respawn).lower(),
             enable_cron_script=self.create_enable_cron_script(),
-            disable_cron_script=self.create_disable_cron_script()
+            disable_cron_script=self.create_disable_cron_script(),
+            work_dir=self.workdir,
         )
         self._runner.run('sudo mkdir -p {0}'.format(
             os.path.dirname(self.config_path)))

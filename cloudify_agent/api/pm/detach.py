@@ -79,6 +79,10 @@ class DetachedDaemon(CronRespawnDaemon):
                            .format(self.config_path))
         self._create_config()
 
+        # Add the celery config
+        self._logger.info('Deploying celery configuration.')
+        self._create_celery_conf()
+
     def delete(self, force=defaults.DAEMON_FORCE_DELETE):
 
         self._logger.debug('Retrieving daemon stats')

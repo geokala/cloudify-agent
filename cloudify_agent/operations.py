@@ -108,6 +108,11 @@ def restart(new_name=None, delay_period=5, **_):
     del attributes['log_file']
     del attributes['pid_file']
 
+    # Get the broker credentials for the daemon
+    bootstrap_agent = ctx.bootstrap_context.cloudify_agent
+    attributes['broker_user'] = bootstrap_agent.broker_user
+    attributes['broker_pass'] = bootstrap_agent.broker_pass
+
     new_daemon = DaemonFactory().new(logger=ctx.logger, **attributes)
 
     # create the new daemon

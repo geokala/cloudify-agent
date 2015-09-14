@@ -90,6 +90,14 @@ class Daemon(object):
         the connection port of the broker process.
         defaults to 5672.
 
+    ``broker_user``
+
+        the username for the broker connection
+
+    ``broker_pass``
+
+        the password for the broker connection
+
     ``broker_url``:
 
         full url to the broker. if this key is specified,
@@ -209,6 +217,8 @@ class Daemon(object):
             'broker_ip') or self.manager_ip
         self.broker_port = params.get(
             'broker_port') or defaults.BROKER_PORT
+        self.broker_user = params.get('broker_user', 'testuser')
+        self.broker_pass = params.get('broker_pass', 'testpass')
         self.host = params.get('host')
         self.deployment_id = params.get('deployment_id')
         self.manager_port = params.get(
@@ -219,8 +229,11 @@ class Daemon(object):
             'queue') or self._get_queue_from_manager()
         self.broker_url = params.get(
             'broker_url') or defaults.BROKER_URL.format(
-            self.broker_ip,
-            self.broker_port)
+            host=self.broker_ip,
+            port=self.broker_port,
+            username=self.broker_user,
+            password=self.broker_pass,
+        )
         self.min_workers = params.get(
             'min_workers') or defaults.MIN_WORKERS
         self.max_workers = params.get(
@@ -274,6 +287,17 @@ class Daemon(object):
                               backend=self.broker_url)
         self._celery.conf.update(
             CELERY_TASK_RESULT_EXPIRES=defaults.CELERY_TASK_RESULT_EXPIRES)
+
+    def _create_celery_conf(self):
+        utils.render_template_to_file(
+            template_path='pm/shared/worker_conf.py.template',
+            file_path=os.path.join(self.virtualenv,
+                                   'lib/python2.7/site-packages',
+                                   'worker_conf.py'),
+            broker_url=self.broker_url,
+            work_dir=self.workdir,
+        )
+
 
     def validate_mandatory(self):
 
@@ -599,7 +623,11 @@ class Daemon(object):
             raise exceptions.DaemonError(error)
 
     def _delete_amqp_queues(self):
-        client = amqp_client.create_client(self.broker_ip)
+        client = amqp_client.create_client(
+            self.broker_ip,
+            amqp_user=self.broker_user,
+            amqp_pass=self.broker_pass,
+        )
         try:
             channel = client.connection.channel()
             self._logger.debug('Deleting queue: {0}'.format(self.queue))

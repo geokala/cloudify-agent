@@ -1,0 +1,2 @@
+# Added to config to avoid showing password on service status
+BROKER_URL = '{{ broker_url }}'

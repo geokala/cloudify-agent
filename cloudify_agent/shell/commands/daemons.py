@@ -21,6 +21,8 @@ from cloudify_agent.api import utils as api_utils
 from cloudify_agent.api.factory import DaemonFactory
 from cloudify_agent.shell import env
 from cloudify_agent.shell.decorators import handle_failures
+from cloudify.context import BootstrapContext
+from cloudify_rest_client import CloudifyClient
 
 
 @click.command(context_settings=dict(ignore_unknown_options=True))
@@ -133,6 +135,22 @@ def create(**params):
     attributes.update(_parse_custom_options(custom_arg))
     click.echo('Creating...')
     from cloudify_agent.shell.main import get_logger
+
+    # We have to build the client manually as the rest client expects us to
+    # have the env variable set for the cloudify manager IP, and it is not
+    # always set
+    client = CloudifyClient(
+        attributes['manager_ip'],
+        attributes['manager_port'],
+    )
+    # Get the broker user and password from the manager
+    bootstrap_context_dict = client.manager.get_context()
+    bootstrap_context_dict = bootstrap_context_dict['context']['cloudify']
+    bootstrap_context = BootstrapContext(bootstrap_context_dict)
+    bootstrap_agent = bootstrap_context.cloudify_agent
+    attributes['broker_user'] = bootstrap_agent.broker_user
+    attributes['broker_pass'] = bootstrap_agent.broker_pass
+
     daemon = DaemonFactory().new(
         logger=get_logger(),
         **attributes
