@@ -68,6 +68,8 @@ class GenericLinuxDaemon(CronRespawnDaemon):
         self._create_config()
 
         # Add the celery config
+        self._logger.info('Deploying SSL cert (if defined).')
+        self._create_ssl_cert()
         self._logger.info('Deploying celery configuration.')
         self._create_celery_conf()
 
@@ -162,7 +164,6 @@ class GenericLinuxDaemon(CronRespawnDaemon):
             cron_respawn=str(self.cron_respawn).lower(),
             enable_cron_script=self.create_enable_cron_script(),
             disable_cron_script=self.create_disable_cron_script(),
-            work_dir=self.workdir,
         )
         self._runner.run('sudo mkdir -p {0}'.format(
             os.path.dirname(self.config_path)))

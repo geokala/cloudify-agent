@@ -112,6 +112,7 @@ def restart(new_name=None, delay_period=5, **_):
     bootstrap_agent = ctx.bootstrap_context.cloudify_agent
     attributes['broker_user'] = bootstrap_agent.broker_user
     attributes['broker_pass'] = bootstrap_agent.broker_pass
+    attributes['broker_ssl_cert'] = bootstrap_agent.broker_ssl_cert
 
     new_daemon = DaemonFactory().new(logger=ctx.logger, **attributes)
 

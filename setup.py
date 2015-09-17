@@ -60,6 +60,7 @@ setup(
             'resources/pm/nssm/nssm.exe',
             'resources/pm/nssm/nssm.conf.template',
             'resources/pm/shared/worker_conf.py.template',
+            'resources/pm/shared/broker.crt.template',
         ]
     },
     description='Cloudify Agent Implementation (Celery based)',

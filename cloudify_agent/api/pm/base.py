@@ -15,6 +15,7 @@
 
 import getpass
 import os
+import ssl
 import time
 
 from celery import Celery
@@ -85,10 +86,16 @@ class Daemon(object):
         the ip address of the broker to connect to.
         defaults to the manager_ip value.
 
+    ``broker_ssl_cert``:
+
+        The SSL public certificate for the broker, if SSL is enabled on the
+        broker. This should be in PEM format and should be the string
+        representation, including the 'BEGIN CERTIFICATE' header and footer.
+
     ``broker_port``
 
         the connection port of the broker process.
-        defaults to 5672.
+        defaults to 5672 if no cert is supplied, or 5671 if a cert is supplied
 
     ``broker_user``
 
@@ -97,18 +104,6 @@ class Daemon(object):
     ``broker_pass``
 
         the password for the broker connection
-
-    ``broker_url``:
-
-        full url to the broker. if this key is specified,
-        the broker_ip and broker_port keys are ignored.
-
-        for example:
-            amqp://192.168.9.19:6786
-
-        if this is not specified, the broker url will be constructed from the
-        broker_ip and broker_port like so:
-        'amqp://guest:guest@<broker_ip>:<broker_port>//'
 
     ``manager_port``:
 
@@ -173,7 +168,7 @@ class Daemon(object):
 
         ####################################################################
         # When subclassing this, do not implement any logic inside the
-        # constructor expect for in-memory calculations and settings, as the
+        # constructor except for in-memory calculations and settings, as the
         # daemon may be instantiated many times for an existing agent. Also,
         # all daemon attributes must be JSON serializable, as daemons are
         # represented as dictionaries and stored as JSON files on Disk. If
@@ -213,10 +208,14 @@ class Daemon(object):
         # Optional parameters
         self.validate_optional()
         self.user = params.get('user') or getpass.getuser()
+        self.broker_ssl_cert = params.get(
+            'broker_ssl_cert', '')
         self.broker_ip = params.get(
             'broker_ip') or self.manager_ip
+        # Port must be determined after SSL cert has been set in order for
+        # intelligent default to work correctly
         self.broker_port = params.get(
-            'broker_port') or defaults.BROKER_PORT
+            'broker_port') or self._get_broker_port()
         self.broker_user = params.get('broker_user', 'testuser')
         self.broker_pass = params.get('broker_pass', 'testpass')
         self.host = params.get('host')
@@ -227,8 +226,9 @@ class Daemon(object):
             'name') or self._get_name_from_manager()
         self.queue = params.get(
             'queue') or self._get_queue_from_manager()
-        self.broker_url = params.get(
-            'broker_url') or defaults.BROKER_URL.format(
+        # This is not retrieved by param as an option any more as it can make
+        # the _delete_amqp_queues function behave badly
+        self.broker_url = defaults.BROKER_URL.format(
             host=self.broker_ip,
             port=self.broker_port,
             username=self.broker_user,
@@ -287,6 +287,11 @@ class Daemon(object):
                               backend=self.broker_url)
         self._celery.conf.update(
             CELERY_TASK_RESULT_EXPIRES=defaults.CELERY_TASK_RESULT_EXPIRES)
+        if self._get_ssl_cert_path() != '':
+            self._celery.conf.BROKER_USE_SSL = {
+                'ca_certs': self._get_ssl_cert_path(),
+                'cert_reqs': ssl.CERT_REQUIRED,
+            }
 
     def _create_celery_conf(self):
         utils.render_template_to_file(
@@ -294,10 +299,10 @@ class Daemon(object):
             file_path=os.path.join(self.virtualenv,
                                    'lib/python2.7/site-packages',
                                    'worker_conf.py'),
+            broker_cert=self._get_ssl_cert_path() or '',
             broker_url=self.broker_url,
             work_dir=self.workdir,
         )
-
 
     def validate_mandatory(self):
 
@@ -323,6 +328,37 @@ class Daemon(object):
 
         self._validate_autoscale()
         self._validate_host()
+
+    def _get_broker_port(self):
+        """
+        Determines the broker port if it has not been provided. Only intended
+        to be called before self.broker_port has been set and after
+        self.broker_ssl_cert has been set.
+        """
+        if self.broker_ssl_cert == '':
+            return 5672
+        else:
+            return 5671
+
+    def _create_ssl_cert(self):
+        """
+        Put the broker SSL cert into a file for AMQP clients to use.
+        """
+        if self.broker_ssl_cert != '':
+            utils.render_template_to_file(
+                template_path='pm/shared/broker.crt.template',
+                file_path=self._get_ssl_cert_path(),
+                cert=self.broker_ssl_cert,
+            )
+
+    def _get_ssl_cert_path(self):
+        """
+        Determine what path the broker SSL cert should reside in.
+        """
+        if self.broker_ssl_cert == '':
+            return ''
+        else:
+            return os.path.join(self.workdir, 'broker.crt')
 
     ########################################################################
     # the following methods must be implemented by the sub-classes as they
@@ -624,9 +660,11 @@ class Daemon(object):
 
     def _delete_amqp_queues(self):
         client = amqp_client.create_client(
-            self.broker_ip,
+            amqp_host=self.broker_ip,
+            amqp_port=self.broker_port,
             amqp_user=self.broker_user,
             amqp_pass=self.broker_pass,
+            ssl_cert_path=self._get_ssl_cert_path(),
         )
         try:
             channel = client.connection.channel()

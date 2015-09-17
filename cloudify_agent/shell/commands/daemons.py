@@ -150,6 +150,7 @@ def create(**params):
     bootstrap_agent = bootstrap_context.cloudify_agent
     attributes['broker_user'] = bootstrap_agent.broker_user
     attributes['broker_pass'] = bootstrap_agent.broker_pass
+    attributes['broker_ssl_cert'] = bootstrap_agent.broker_ssl_cert
 
     daemon = DaemonFactory().new(
         logger=get_logger(),
